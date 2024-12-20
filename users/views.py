@@ -1,5 +1,7 @@
 import json
+import logging
 
+from django.contrib.auth import login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
@@ -7,41 +9,65 @@ from django.dispatch import receiver
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
+from psycopg2 import IntegrityError
+from rest_framework import status, generics
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from shop.models import Product
+from shop.serializers import ProductSerializer
 from users.models import Profile
+from users.serializers import UserRegistrationSerializer, UserLoginSerializer
 
+logger = logging.getLogger(__name__)
 
-@csrf_exempt
-def register_user(self, request):
-    try:
-        data = json.loads(request.body)
+class UserRegistrationAPIView(generics.CreateAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserRegistrationSerializer
 
-        username = data.get('username')
-        email = data.get('email')
-        password = data.get('password')
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
 
-        if User.objects.filter(username=username).exists():
-            return JsonResponse({'error': 'Имя пользователя уже занято.'}, status=400)
-        if User.objects.filter(email=email).exists():
-            return JsonResponse({'error': 'Электронная почта уже используется.'}, status=400)
+        try:
+            # Attempt to create the user
+            user = serializer.create(serializer.initial_data)
+            Profile.objects.create(user=user)
 
-        user = User.objects.create_user(username=username, email=email, password=password)
-        return JsonResponse({'message': 'Пользователь успешно зарегистрирован!'}, status=201)
+            logger.info(f"User registered successfully: {user.username}")
+            return Response({'message': 'Пользователь успешно зарегистрирован!'}, status=status.HTTP_201_CREATED)
 
-    except json.decoder.JSONDecodeError:
-        return JsonResponse({'error': 'Некорректный JSON.'}, status=400)
-    except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        except IntegrityError:
+            logger.error("User registration failed: username or email already exists.")
+            return Response({'error': 'Имя пользователя или электронная почта уже заняты.'}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.exception("An unexpected error occurred during user registration.")
+            return Response({'error': 'Произошла ошибка. Попробуйте позже.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-# @receiver(post_save, sender=User)
-# def create_user_profile(sender, instance, created, **kwargs):
-#     if created:
-#         Profile.objects.create(user=instance)
+class UserLoginAPIView(generics.GenericAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = UserLoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        print(f"got login request: {request.data}")
+        serializer = self.get_serializer(data=request.data)
+
+        try:
+            serializer.is_valid(raise_exception=False)
+            user = serializer.validated_data['user']
+
+            login(request, user)
+
+            logger.info(f"User logged in successfully: {user.username}")
+
+            response = Response({'message': 'Успешный вход!'}, status=status.HTTP_200_OK)
+
+            return response
+
+        except Exception as e:
+            logger.error("Login failed: Invalid credentials.")
+            return Response({'error': 'Неверные учетные данные.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 class FavoritesView(APIView):
     permission_classes = [IsAuthenticated]
@@ -58,5 +84,5 @@ class FavoritesView(APIView):
         profile = get_object_or_404(Profile, user=request.user)
         favorite_products = profile.favorite_products.all()
 
-        favorite_product_names = [product.name for product in favorite_products]
-        return Response(favorite_product_names, status=status.HTTP_200_OK)
+        serializer = ProductSerializer(favorite_products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
