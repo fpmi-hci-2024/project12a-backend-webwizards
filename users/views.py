@@ -87,3 +87,13 @@ class FavoritesView(generics.GenericAPIView):
 
         serializer = self.get_serializer(favorite_products, many=True)  # Use self.get_serializer
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, product_id):
+        profile = get_object_or_404(Profile, user=request.user)
+        product = get_object_or_404(Product, id=product_id)
+
+        if product in profile.favorite_products.all():
+            profile.favorite_products.remove(product)
+            return Response({'message': 'Продукт удален из избранного!'}, status=status.HTTP_204_NO_CONTENT)
+        else:
+            return Response({'message': 'Продукт не найден в избранном!'}, status=status.HTTP_404_NOT_FOUND)
