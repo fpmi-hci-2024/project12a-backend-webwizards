@@ -326,6 +326,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/Product'
           description: ''
+  /products/filter/:
+    get:
+      operationId: products_filter_list
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProductFilter'
+          description: ''
+    post:
+      operationId: products_filter_create
+      tags:
+      - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductFilter'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProductFilter'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProductFilter'
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductFilter'
+          description: ''
   /users/:
     post:
       operationId: users_create
@@ -551,9 +595,14 @@ components:
           type: string
           maxLength: 200
           pattern: ^[-a-zA-Z0-9_]+$
-        image:
+        manufacturer:
           type: string
-          format: uri
+          maxLength: 200
+        release_year:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
         description:
           type: string
         price:
@@ -582,6 +631,25 @@ components:
       - slug
       - stock
       - updated
+    ProductFilter:
+      type: object
+      properties:
+        min_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        max_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        manufacturers:
+          type: array
+          items:
+            type: string
+        min_year:
+          type: integer
+        max_year:
+          type: integer
     UserLogin:
       type: object
       properties:
