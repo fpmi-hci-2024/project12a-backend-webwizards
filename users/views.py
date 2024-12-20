@@ -69,8 +69,9 @@ class UserLoginAPIView(generics.GenericAPIView):
             return Response({'error': 'Неверные учетные данные.'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class FavoritesView(APIView):
+class FavoritesView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
+    serializer_class = ProductSerializer
 
     def post(self, request, product_id):
         product = get_object_or_404(Product, id=product_id)
@@ -84,5 +85,5 @@ class FavoritesView(APIView):
         profile = get_object_or_404(Profile, user=request.user)
         favorite_products = profile.favorite_products.all()
 
-        serializer = ProductSerializer(favorite_products, many=True)
+        serializer = self.get_serializer(favorite_products, many=True)  # Use self.get_serializer
         return Response(serializer.data, status=status.HTTP_200_OK)
