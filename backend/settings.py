@@ -43,9 +43,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "drf_spectacular",
     "shop",
     "cart",
-    "orders"
+    "orders",
+    "users"
 ]
 
 MIDDLEWARE = [
@@ -57,6 +59,18 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+REST_FRAMEWORK = {
+    # YOUR SETTINGS
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Cifrovic API',
+    'DESCRIPTION': 'API for online tech shop Cifrovic',
+    'VERSION': '0.0.1',
+    # OTHER SETTINGS
+}
 
 ROOT_URLCONF = "backend.urls"
 

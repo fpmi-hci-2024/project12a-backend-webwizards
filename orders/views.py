@@ -1,7 +1,8 @@
 from django.shortcuts import render
 
 # Create your views here.
-# def order_create(request):
+def order_create(request):
+     pass
 #     cart = Cart(request)
 #     if request.method == 'POST':
 #         form = OrderCreateForm(request.POST)

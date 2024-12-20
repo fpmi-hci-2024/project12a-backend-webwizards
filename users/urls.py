@@ -1,9 +1,8 @@
 from django.urls import path
 
-from users.views import user_favorites, register_user, add_to_favorites
+from users.views import register_user, FavoritesView
 
 urlpatterns = [
     path('register/', register_user, name='register_user'),
-    path('favorites/add/<int:product_id>/', add_to_favorites, name='add_to_favorites'),
-    path('<int:user_id>/favorites/', user_favorites, name='user_favorites'),
+    path('favorites/', FavoritesView.as_view(), name='favorites'),
 ]

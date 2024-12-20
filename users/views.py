@@ -7,6 +7,10 @@ from django.dispatch import receiver
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from shop.models import Product
 from users.models import Profile
@@ -34,26 +38,25 @@ def register_user(self, request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
-    if created:
-        Profile.objects.create(user=instance)
+# @receiver(post_save, sender=User)
+# def create_user_profile(sender, instance, created, **kwargs):
+#     if created:
+#         Profile.objects.create(user=instance)
 
-@login_required
-def add_to_favorites(request, product_id):
-    if request.method == 'POST':
+class FavoritesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, product_id):
         product = get_object_or_404(Product, id=product_id)
         profile = get_object_or_404(Profile, user=request.user)
 
         profile.favorite_products.add(product)
 
-        return JsonResponse({'message': 'Продукт добавлен в избранное!'}, status=201)
+        return Response({'message': 'Продукт добавлен в избранное!'}, status=status.HTTP_201_CREATED)
 
-    return JsonResponse({'error': 'Метод не разрешен.'}, status=405)
+    def get(self, request):
+        profile = get_object_or_404(Profile, user=request.user)
+        favorite_products = profile.favorite_products.all()
 
-def user_favorites(request, user_id):
-    profile = get_object_or_404(Profile, user_id=user_id)
-    favorite_products = profile.favorite_products.all()
-
-    favorite_product_names = [product.name for product in favorite_products]
-    return JsonResponse(favorite_product_names, safe=False)
+        favorite_product_names = [product.name for product in favorite_products]
+        return Response(favorite_product_names, status=status.HTTP_200_OK)
