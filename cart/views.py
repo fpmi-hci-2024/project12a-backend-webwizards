@@ -1,31 +1,50 @@
-from django.shortcuts import render
-from django.views.decorators.http import require_POST
-from shop.models import Product
-from .cart import Cart
+from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Cart, CartItem
+from .serializers import CartSerializer, CartItemSerializer
 
 # Create your views here.
-# @require_POST
-def cart_add(request, product_id):
-     pass
-#     cart = Cart(request)
-#     product = get_object_or_404(Product, id=product_id)
-#     form = CartAddProductForm(request.POST)
-#     if form.is_valid():
-#         cd = form.cleaned_data
-#         cart.add(product=product,
-#                  quantity=cd['quantity'],
-#                  update_quantity=cd['update'])
-#     return redirect('cart:cart_detail')
-#
-#
-def cart_remove(request, product_id):
-     pass
-#     cart = Cart(request)
-#     product = get_object_or_404(Product, id=product_id)
-#     cart.remove(product)
-#     return redirect('cart:cart_detail')
-#
-def cart_detail(request):
-     pass
-#     cart = Cart(request)
-#     return render(request, 'cart/detail.html', {'cart': cart})
+class CartAPIView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CartSerializer
+
+    def get_cart(self):
+        return Cart.objects.get(profile=self.request.user.profile)
+
+    def get(self, request, *args, **kwargs):
+        cart = self.get_cart()
+        serializer = self.get_serializer(cart)
+        return Response(serializer.data)
+
+    def post(self, request, *args, **kwargs):
+        cart = self.get_cart()
+        item_serializer = CartItemSerializer(data=request.data)
+        if item_serializer.is_valid():
+            item_serializer.save(cart=cart)
+            return Response(item_serializer.data, status=status.HTTP_201_CREATED)
+        return Response(item_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, *args, **kwargs):
+        cart = self.get_cart()
+        cart.items.all().delete()  # Clear all items in the cart
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class CartItemAPIView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = CartItemSerializer
+
+    def get_cart(self):
+        return Cart.objects.get(profile=self.request.user.profile)
+
+    def get_cart_item(self, pk):
+        cart = self.get_cart()
+        return cart.items.get(id=pk)
+
+    def delete(self, request, *args, **kwargs):
+        try:
+            cart_item = self.get_cart_item(kwargs['pk'])
+            cart_item.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except CartItem.DoesNotExist:
+            return Response({"detail": "Элемент не найден."}, status=status.HTTP_404_NOT_FOUND)

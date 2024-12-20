@@ -8,10 +8,10 @@ from .serializers import OrderSerializer, OrderItemSerializer
 # Create your views here.
 class OrderAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = OrderSerializer  # Assuming you have a serializer for the Order model
+    serializer_class = OrderSerializer
 
     def get(self, request):
-        orders = Order.objects.filter(profile=request.user.profile)  # User's profile
+        orders = Order.objects.filter(profile=request.user.profile)
         serializer = self.get_serializer(orders, many=True)
         return Response(serializer.data)
 
