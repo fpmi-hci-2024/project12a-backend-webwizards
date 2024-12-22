@@ -153,6 +153,8 @@ paths:
   /cart/:
     get:
       operationId: cart_retrieve
+      description: Получить детали текущей корзины пользователя.
+      summary: Получение корзины
       tags:
       - cart
       security:
@@ -165,33 +167,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/Cart'
           description: ''
+        '404':
+          description: Корзина не найдена.
     post:
       operationId: cart_create
+      description: Добавить новый товар в корзину пользователя.
+      summary: Добавление товара в корзину
       tags:
       - cart
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Cart'
+              $ref: '#/components/schemas/CartItem'
+            examples:
+              ПримерЗапроса:
+                value:
+                  product: 1
+                  quantity: 2
+                summary: Добавление товара в корзину
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Cart'
+              $ref: '#/components/schemas/CartItem'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Cart'
+              $ref: '#/components/schemas/CartItem'
+        required: true
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Cart'
+                $ref: '#/components/schemas/CartItem'
+              examples:
+                ПримерЗапроса:
+                  value:
+                    product: 1
+                    quantity: 2
+                  summary: Добавление товара в корзину
           description: ''
+        '400':
+          description: Ошибка валидации данных.
     delete:
       operationId: cart_destroy
+      description: Удалить все товары из корзины текущего пользователя.
+      summary: Очистка корзины
       tags:
       - cart
       security:
@@ -199,10 +222,12 @@ paths:
       - basicAuth: []
       responses:
         '204':
-          description: No response body
+          description: Корзина успешно очищена.
   /cart/items/{id}/:
     delete:
       operationId: cart_items_destroy
+      description: Удалить товар из корзины текущего пользователя по ID элемента.
+      summary: Удаление товара из корзины
       parameters:
       - in: path
         name: id
@@ -216,10 +241,14 @@ paths:
       - basicAuth: []
       responses:
         '204':
-          description: No response body
+          description: Элемент успешно удален.
+        '404':
+          description: Элемент не найден.
   /categories/:
     get:
       operationId: categories_list
+      description: Получить список всех доступных категорий.
+      summary: Получение списка категорий
       tags:
       - categories
       security:
@@ -238,7 +267,35 @@ paths:
   /categories/{slug}/:
     get:
       operationId: categories_list_2
+      description: Получить список продуктов в указанной категории. Поддерживаются
+        фильтры по цене, производителям и году выпуска.
+      summary: Получение продуктов по категории
       parameters:
+      - in: query
+        name: manufacturers
+        schema:
+          type: string
+        description: Список производителей
+      - in: query
+        name: max_price
+        schema:
+          type: integer
+        description: Максимальная цена продукта
+      - in: query
+        name: max_year
+        schema:
+          type: integer
+        description: Максимальный год выпуска продукта
+      - in: query
+        name: min_price
+        schema:
+          type: integer
+        description: Минимальная цена продукта
+      - in: query
+        name: min_year
+        schema:
+          type: integer
+        description: Минимальный год выпуска продукта
       - in: path
         name: slug
         schema:
@@ -259,6 +316,8 @@ paths:
                 items:
                   $ref: '#/components/schemas/Product'
           description: ''
+        '404':
+          description: Продукты не найдены для этой категории.
   /orders/:
     get:
       operationId: orders_retrieve
@@ -313,6 +372,8 @@ paths:
   /products/:
     get:
       operationId: products_list
+      description: Получить все доступные товары.
+      summary: Получение всех доступных товаров
       tags:
       - products
       security:
@@ -331,6 +392,8 @@ paths:
   /products/{id}/:
     get:
       operationId: products_retrieve
+      description: Получить подробную информацию о продукте по его ID.
+      summary: Получение информации о товаре
       parameters:
       - in: path
         name: id
@@ -350,11 +413,99 @@ paths:
               schema:
                 $ref: '#/components/schemas/Product'
           description: ''
-  /users/:
-    post:
-      operationId: users_create
+        '404':
+          description: Товар не найден
+  /products/{product_id}/reviews/:
+    get:
+      operationId: products_reviews_list
+      description: Получить список отзывов для указанного продукта. Если отзывы отсутствуют,
+        будет возвращено сообщение об ошибке.
+      summary: Получение отзывов о продукте
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
       tags:
-      - users
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+          description: ''
+        '404':
+          description: Отзывы для этого продукта не найдены.
+    post:
+      operationId: products_reviews_create
+      description: Создать новый отзыв для указанного продукта. Если отзыв уже существует
+        от текущего пользователя, будет возвращено сообщение об ошибке.
+      summary: Добавление отзыва на продукт
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Review'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Review'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Review'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+          description: ''
+        '400':
+          description: Ошибка валидации данных. Пользователь уже оставил отзыв.
+    delete:
+      operationId: products_reviews_destroy
+      description: Удалить отзыв пользователя о продукте. Если отзыв не найден, будет
+        возвращено сообщение об ошибке.
+      summary: Удаление отзыва о продукте
+      parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - products
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: Отзыв успешно удален.
+        '404':
+          description: Отзыв не найден.
+  /user/:
+    post:
+      operationId: user_create
+      tags:
+      - user
       requestBody:
         content:
           application/json:
@@ -378,11 +529,11 @@ paths:
               schema:
                 $ref: '#/components/schemas/UserRegistration'
           description: ''
-  /users/favorites/:
+  /user/favorites/:
     get:
-      operationId: users_favorites_retrieve
+      operationId: user_favorites_retrieve
       tags:
-      - users
+      - user
       security:
       - cookieAuth: []
       - basicAuth: []
@@ -394,9 +545,9 @@ paths:
                 $ref: '#/components/schemas/Product'
           description: ''
     post:
-      operationId: users_favorites_create
+      operationId: user_favorites_create
       tags:
-      - users
+      - user
       requestBody:
         content:
           application/json:
@@ -420,20 +571,20 @@ paths:
                 $ref: '#/components/schemas/Product'
           description: ''
     delete:
-      operationId: users_favorites_destroy
+      operationId: user_favorites_destroy
       tags:
-      - users
+      - user
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
         '204':
           description: No response body
-  /users/login/:
+  /user/login/:
     post:
-      operationId: users_login_create
+      operationId: user_login_create
       tags:
-      - users
+      - user
       requestBody:
         content:
           application/json:
@@ -611,6 +762,86 @@ components:
       - slug
       - stock
       - updated
+    Profile:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - id
+      - user
+    RatingEnum:
+      enum:
+      - 1
+      - 2
+      - 3
+      - 4
+      - 5
+      type: integer
+      description: |-
+        * `1` - 1
+        * `2` - 2
+        * `3` - 3
+        * `4` - 4
+        * `5` - 5
+    Review:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product:
+          type: integer
+        profile:
+          allOf:
+          - $ref: '#/components/schemas/Profile'
+          readOnly: true
+        rating:
+          allOf:
+          - $ref: '#/components/schemas/RatingEnum'
+          minimum: 0
+          maximum: 2147483647
+        comment:
+          type: string
+          nullable: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+        updated:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created
+      - id
+      - product
+      - profile
+      - rating
+      - updated
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+      required:
+      - id
+      - username
     UserLogin:
       type: object
       properties:
