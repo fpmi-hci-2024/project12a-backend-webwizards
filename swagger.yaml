@@ -235,6 +235,30 @@ paths:
                 items:
                   $ref: '#/components/schemas/Category'
           description: ''
+  /categories/{slug}/:
+    get:
+      operationId: categories_list_2
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - categories
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
   /orders/:
     get:
       operationId: orders_retrieve
@@ -325,50 +349,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-          description: ''
-  /products/filter/:
-    get:
-      operationId: products_filter_list
-      tags:
-      - products
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ProductFilter'
-          description: ''
-    post:
-      operationId: products_filter_create
-      tags:
-      - products
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ProductFilter'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/ProductFilter'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/ProductFilter'
-      security:
-      - cookieAuth: []
-      - basicAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ProductFilter'
           description: ''
   /users/:
     post:
@@ -631,25 +611,6 @@ components:
       - slug
       - stock
       - updated
-    ProductFilter:
-      type: object
-      properties:
-        min_price:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        max_price:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
-        manufacturers:
-          type: array
-          items:
-            type: string
-        min_year:
-          type: integer
-        max_year:
-          type: integer
     UserLogin:
       type: object
       properties:

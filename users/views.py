@@ -7,9 +7,9 @@ from rest_framework import status, generics
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from shop.models import Product
+from cart.models import Cart
+from shop.models import Product, Profile
 from shop.serializers import ProductSerializer
-from users.models import Profile
 from users.serializers import UserRegistrationSerializer, UserLoginSerializer
 
 logger = logging.getLogger(__name__)
@@ -22,11 +22,11 @@ class UserRegistrationAPIView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data)
 
         try:
-            # Attempt to create the user
             user = serializer.create(serializer.initial_data)
-            Profile.objects.create(user=user)
+            profile = Profile.objects.create(user=user)
+            Cart.objects.create(profile=profile)
 
-            logger.info(f"User registered successfully: {user.username}")
+            logger.info(f"User registered successfully: {user.username} with profile: {profile.id}")
             return Response({'message': 'Пользователь успешно зарегистрирован!'}, status=status.HTTP_201_CREATED)
 
         except IntegrityError:
@@ -35,7 +35,6 @@ class UserRegistrationAPIView(generics.CreateAPIView):
         except Exception as e:
             logger.exception("An unexpected error occurred during user registration.")
             return Response({'error': 'Произошла ошибка. Попробуйте позже.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 class UserLoginAPIView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserLoginSerializer

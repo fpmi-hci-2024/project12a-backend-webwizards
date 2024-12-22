@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample, extend_schema_view, OpenApiParameter
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -5,6 +6,51 @@ from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
 
 # Create your views here.
+@extend_schema_view(
+    get=extend_schema(
+        summary="Получение корзины",
+        description="Получить детали текущей корзины пользователя.",
+        responses={
+            200: CartSerializer,
+            404: OpenApiResponse(
+                response=None,
+                description="Корзина не найдена."
+            ),
+        },
+    ),
+    post=extend_schema(
+        summary="Добавление товара в корзину",
+        description="Добавить новый товар в корзину пользователя.",
+        request=CartItemSerializer,
+        responses={
+            201: CartItemSerializer,
+            400: OpenApiResponse(
+                response=None,
+                description="Ошибка валидации данных."
+            ),
+        },
+        examples=[
+            OpenApiExample(
+                "Пример запроса",
+                summary="Добавление товара в корзину",
+                value={
+                    "product": 1,  # ID продукта
+                    "quantity": 2,  # Количество
+                },
+            ),
+        ],
+    ),
+    delete=extend_schema(
+        summary="Очистка корзины",
+        description="Удалить все товары из корзины текущего пользователя.",
+        responses={
+            204: OpenApiResponse(
+                response=None,
+                description="Корзина успешно очищена."
+            ),
+        },
+    ),
+)
 class CartAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CartSerializer
@@ -27,9 +73,35 @@ class CartAPIView(generics.GenericAPIView):
 
     def delete(self, request, *args, **kwargs):
         cart = self.get_cart()
-        cart.items.all().delete()  # Clear all items in the cart
+        cart.items.all().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+
+@extend_schema_view(
+    delete=extend_schema(
+        summary="Удаление товара из корзины",
+        description="Удалить товар из корзины текущего пользователя по ID элемента.",
+        responses={
+            204: OpenApiResponse(
+                response=None,
+                description="Элемент успешно удален."
+            ),
+            404: OpenApiResponse(
+                response=None,
+                description="Элемент не найден."
+            ),
+        },
+        examples=[
+            OpenApiExample(
+                "Пример запроса",
+                summary="Удаление товара с ID 1 из корзины",
+                value={
+                    "id": 1,
+                },
+            ),
+        ],
+    ),
+)
 class CartItemAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = CartItemSerializer
@@ -48,3 +120,4 @@ class CartItemAPIView(generics.GenericAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except CartItem.DoesNotExist:
             return Response({"detail": "Элемент не найден."}, status=status.HTTP_404_NOT_FOUND)
+
