@@ -1,3 +1,5 @@
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiExample, extend_schema_view, OpenApiParameter
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
@@ -6,6 +8,7 @@ from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
 
 # Create your views here.
+@method_decorator(csrf_exempt, name='dispatch')
 @extend_schema_view(
     get=extend_schema(
         summary="Получение корзины",
@@ -76,7 +79,7 @@ class CartAPIView(generics.GenericAPIView):
         cart.items.all().delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-
+@method_decorator(csrf_exempt, name='dispatch')
 @extend_schema_view(
     delete=extend_schema(
         summary="Удаление товара из корзины",

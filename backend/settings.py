@@ -14,6 +14,8 @@ from pathlib import Path
 
 import  environ
 
+
+
 env = environ.Env()
 environ.Env.read_env()
 
@@ -54,7 +56,8 @@ MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+#    "django.middleware.csrf.CsrfViewMiddleware",
+    "backend.utils.DisableCSRF",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",

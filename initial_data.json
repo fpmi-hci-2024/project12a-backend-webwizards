@@ -1,0 +1,146 @@
+[
+    {
+        "model": "shop.category",
+        "pk": 1,
+        "fields": {
+            "name": "Ноутбуки",
+            "slug": "laptops",
+            "description": "Переносные компьютеры для работы и отдыха."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 2,
+        "fields": {
+            "name": "Телевизоры",
+            "slug": "tv",
+            "description": "Устройства для просмотра видео и ТВ программ."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 3,
+        "fields": {
+            "name": "Наушники",
+            "slug": "headphones",
+            "description": "Аудиоаксессуары для прослушивания музыки."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 4,
+        "fields": {
+            "name": "Клавиатуры",
+            "slug": "keyboards",
+            "description": "Устройства ввода для компьютеров."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 5,
+        "fields": {
+            "name": "Смартфоны",
+            "slug": "smartphones",
+            "description": "Мобильные телефоны."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 6,
+        "fields": {
+            "name": "Мыши",
+            "slug": "mice",
+            "description": "Устройства управления курсором на экране."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 7,
+        "fields": {
+            "name": "Колонки",
+            "slug": "speakers",
+            "description": "Акустические системы для воспроизведения звука."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 8,
+        "fields": {
+            "name": "Флеш-накопители",
+            "slug": "flash-drives",
+            "description": "Устройства для хранения и переноса данных."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 9,
+        "fields": {
+            "name": "Видеокамеры",
+            "slug": "cameras",
+            "description": "Устройства для записи видео."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 10,
+        "fields": {
+            "name": "Игровые консоли",
+            "slug": "consoles",
+            "description": "Устройства для видеоигр."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 11,
+        "fields": {
+            "name": "Смарт-часы",
+            "slug": "smart-watches",
+            "description": "Часы с функциями смартфона."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 12,
+        "fields": {
+            "name": "Фитнес-трекеры",
+            "slug": "fitness-trackers",
+            "description": "Устройства для отслеживания физической активности."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 13,
+        "fields": {
+            "name": "Электронные книги",
+            "slug": "e-books",
+            "description": "Устройства для чтения электронных книг."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 14,
+        "fields": {
+            "name": "Принтеры",
+            "slug": "printers",
+            "description": "Устройства для печати документов."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 15,
+        "fields": {
+            "name": "Планшеты",
+            "slug": "tablets",
+            "description": "Портативные устройства с сенсорным экраном."
+        }
+    },
+    {
+        "model": "shop.category",
+        "pk": 16,
+        "fields": {
+            "name": "Персональные компьютеры",
+            "slug": "pc",
+            "description": "Настольные компьютеры для работы и развлечений."
+        }
+    }
+]
