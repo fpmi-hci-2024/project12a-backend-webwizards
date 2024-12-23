@@ -5,10 +5,18 @@ from shop.models import Product, Profile
 
 # Create your models here.
 class Order(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'В ожидании'),
+        ('processed', 'Обработан'),
+        ('shipped', 'Отправлен'),
+        ('delivered', 'Доставлен'),
+        ('canceled', 'Отменен'),
+    ]
+
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='orders')
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
-    status = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, db_index=True)
 
     class Meta:
         ordering = ('-created',)
@@ -16,7 +24,7 @@ class Order(models.Model):
         verbose_name_plural = 'Заказы'
 
     def __str__(self):
-        return 'Order {}'.format(self.id)
+        return 'Заказ {}'.format(self.id)
 
     def get_total_cost(self):
         return sum(item.get_cost() for item in self.items.all())

@@ -67,9 +67,16 @@ REST_FRAMEWORK = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Cifrovic API',
-    'DESCRIPTION': 'API for online tech shop Cifrovic',
-    'VERSION': '0.0.1',
-    # OTHER SETTINGS
+    'DESCRIPTION': 'API для онлайн-магазина цифровой техники "Цифровик"',
+    'VERSION': '0.1.0',
+    'CONTACT': {
+        'name': 'Айана Илья',
+        'email': 'ilyaayana92@gmail.com'
+    },
+    'LICENSE': {
+        'name': 'MIT',
+        'url': 'https://opensource.org/licenses/MIT'
+    },
 }
 
 ROOT_URLCONF = "backend.urls"

@@ -1,3 +1,4 @@
+from django.db.models import Q
 from drf_spectacular import openapi
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiResponse, OpenApiParameter, OpenApiExample, extend_schema_view
@@ -24,18 +25,30 @@ class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
 
+
 @extend_schema_view(
     get=extend_schema(
-        summary="Получение всех доступных товаров",
-        description="Получить все доступные товары.",
+        summary="Получение всех доступных товаров (с возможностью поиска)",
+        description="Получить все доступные товары. Можно использовать параметр `search` для фильтрации товаров по имени или описанию.",
+        parameters=[
+            OpenApiParameter('search', str, description='Поисковая строка для фильтрации товаров')
+        ],
         responses={
             200: ProductSerializer(many=True),
         },
     ),
 )
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.all()
     serializer_class = ProductSerializer
+
+    def get_queryset(self):
+        queryset = Product.objects.all()
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                Q(name__icontains=search) | Q(description__icontains=search)
+            )
+        return queryset
 
     def get(self, request, *args, **kwargs):
         return super().get(request, *args, **kwargs)
@@ -58,9 +71,10 @@ class ProductDetailView(generics.RetrieveAPIView):
     serializer_class = ProductSerializer
     lookup_field = 'id'
 
+
 @extend_schema_view(
     get=extend_schema(
-        summary="Получение продуктов по категории",
+        summary="Получение продуктов по категории (с возможностью фильтрации)",
         description="Получить список продуктов в указанной категории. Поддерживаются фильтры по цене, производителям и году выпуска.",
         parameters=[
             OpenApiParameter('min_price', int, description="Минимальная цена продукта", required=False),
