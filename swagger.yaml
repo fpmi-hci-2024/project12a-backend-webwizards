@@ -723,7 +723,7 @@ components:
           type: integer
           readOnly: true
         product:
-          type: integer
+          $ref: '#/components/schemas/Product'
         quantity:
           type: integer
           maximum: 2147483647
