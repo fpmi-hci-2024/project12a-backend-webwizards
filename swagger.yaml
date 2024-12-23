@@ -375,9 +375,9 @@ paths:
           description: ''
         '400':
           description: Корзина пуста. Заказ не был создан.
-  /orders/orders/{id}/:
+  /orders/{id}/:
     get:
-      operationId: orders_orders_retrieve
+      operationId: orders_retrieve
       description: Возвращает детали конкретного заказа и список его элементов. Доступно
         только для аутентифицированных пользователей.
       summary: Получение деталей заказа
@@ -539,6 +539,25 @@ paths:
         '404':
           description: Отзыв не найден.
   /user/:
+    get:
+      operationId: user_retrieve
+      description: Возвращает профиль аутентифицированного пользователя.
+      summary: Получение профиля пользователя
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+          description: Профиль пользователя успешно возвращен.
+        '403':
+          description: Пользователь не аутентифицирован.
     post:
       operationId: user_create
       description: Создает нового пользователя и соответствующий профиль. Также создается
@@ -850,7 +869,13 @@ components:
           readOnly: true
         user:
           $ref: '#/components/schemas/User'
+        favorite_products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+          readOnly: true
       required:
+      - favorite_products
       - id
       - user
     RatingEnum:
