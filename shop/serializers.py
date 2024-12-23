@@ -2,6 +2,11 @@ from django.contrib.auth.models import User
 from rest_framework import serializers
 from .models import Category, Product, Review, Profile
 
+class ProductSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Product
+        fields = ['id', 'name', 'slug', "manufacturer","release_year", 'description', 'price', 'stock', 'available', 'created', 'updated']
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -9,11 +14,12 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email']
 
 class ProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()  # Используем UserSerializer для поля user
+    user = UserSerializer()
+    favorite_products = ProductSerializer(many=True, read_only=True)
 
     class Meta:
         model = Profile
-        fields = ['id', 'user']
+        fields = ['id', 'user','favorite_products']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
@@ -23,11 +29,6 @@ class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
         fields = ['id', 'name', 'slug', 'description']
-
-class ProductSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Product
-        fields = ['id', 'name', 'slug', "manufacturer","release_year", 'description', 'price', 'stock', 'available', 'created', 'updated']
 
 class ProductFilterSerializer(serializers.Serializer):
     min_price = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)

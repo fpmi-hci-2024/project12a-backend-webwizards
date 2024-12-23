@@ -10,7 +10,7 @@ from rest_framework.response import Response
 
 from cart.models import Cart
 from shop.models import Product, Profile
-from shop.serializers import ProductSerializer
+from shop.serializers import ProductSerializer, ProfileSerializer
 from users.serializers import UserRegistrationSerializer, UserLoginSerializer
 
 logger = logging.getLogger(__name__)
@@ -46,8 +46,22 @@ logger = logging.getLogger(__name__)
             ),
         ],
     ),
+    get=extend_schema(
+        summary="Получение профиля пользователя",
+        description="Возвращает профиль аутентифицированного пользователя.",
+        responses={
+            200: OpenApiResponse(
+                response=ProfileSerializer,
+                description="Профиль пользователя успешно возвращен."
+            ),
+            403: OpenApiResponse(
+                response=None,
+                description="Пользователь не аутентифицирован."
+            ),
+        },
+    ),
 )
-class UserRegistrationAPIView(generics.CreateAPIView):
+class UserProfileAPIView(generics.CreateAPIView):
     permission_classes = [AllowAny]
     serializer_class = UserRegistrationSerializer
 
@@ -68,6 +82,15 @@ class UserRegistrationAPIView(generics.CreateAPIView):
         except Exception as e:
             logger.exception("An unexpected error occurred during user registration.")
             return Response({'error': 'Произошла ошибка. Попробуйте позже.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def get(self, request, *args, **kwargs):
+        user = request.user
+        if not user.is_authenticated:
+            return Response({'error': 'Пользователь не аутентифицирован.'}, status=status.HTTP_403_FORBIDDEN)
+
+        profile = Profile.objects.get(user=user)
+        serializer = ProfileSerializer(profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 @extend_schema_view(
     post=extend_schema(
