@@ -1,8 +1,14 @@
 openapi: 3.0.3
 info:
   title: Cifrovic API
-  version: 0.0.1
-  description: API for online tech shop Cifrovic
+  version: 0.1.0
+  description: API для онлайн-магазина цифровой техники "Цифровик"
+  contact:
+    name: Айана Илья
+    email: ilyaayana92@gmail.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
 paths:
   /api/schema/:
     get:
@@ -269,7 +275,7 @@ paths:
       operationId: categories_list_2
       description: Получить список продуктов в указанной категории. Поддерживаются
         фильтры по цене, производителям и году выпуска.
-      summary: Получение продуктов по категории
+      summary: Получение продуктов по категории (с возможностью фильтрации)
       parameters:
       - in: query
         name: manufacturers
@@ -320,7 +326,10 @@ paths:
           description: Продукты не найдены для этой категории.
   /orders/:
     get:
-      operationId: orders_retrieve
+      operationId: orders_list
+      description: Получить список всех заказов, связанных с текущим пользователем.
+        Если заказы отсутствуют, будет возвращен пустой список.
+      summary: Получение всех заказов пользователя
       tags:
       - orders
       security:
@@ -331,10 +340,15 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Order'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Order'
           description: ''
     post:
       operationId: orders_create
+      description: Создать новый заказ для текущего пользователя, перенести все элементы
+        из корзины в заказ. Если корзина пуста, будет возвращено сообщение об ошибке.
+      summary: Создание нового заказа на основе элементов корзины
       tags:
       - orders
       requestBody:
@@ -353,27 +367,50 @@ paths:
       - cookieAuth: []
       - basicAuth: []
       responses:
-        '200':
+        '201':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
           description: ''
-    delete:
-      operationId: orders_destroy
+        '400':
+          description: Корзина пуста. Заказ не был создан.
+  /orders/orders/{id}/:
+    get:
+      operationId: orders_orders_retrieve
+      description: Возвращает детали конкретного заказа и список его элементов. Доступно
+        только для аутентифицированных пользователей.
+      summary: Получение деталей заказа
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
       tags:
       - orders
       security:
       - cookieAuth: []
       - basicAuth: []
       responses:
-        '204':
-          description: No response body
+        '200':
+          description: Детали заказа и его элементы успешно возвращены.
+        '403':
+          description: Доступ запрещен. У вас нет прав на просмотр этого заказа.
+        '404':
+          description: Заказ не найден.
   /products/:
     get:
       operationId: products_list
-      description: Получить все доступные товары.
-      summary: Получение всех доступных товаров
+      description: Получить все доступные товары. Можно использовать параметр `search`
+        для фильтрации товаров по имени или описанию.
+      summary: Получение всех доступных товаров (с возможностью поиска)
+      parameters:
+      - in: query
+        name: search
+        schema:
+          type: string
+        description: Поисковая строка для фильтрации товаров
       tags:
       - products
       security:
@@ -504,6 +541,9 @@ paths:
   /user/:
     post:
       operationId: user_create
+      description: Создает нового пользователя и соответствующий профиль. Также создается
+        корзина для пользователя.
+      summary: Регистрация пользователя
       tags:
       - user
       requestBody:
@@ -511,6 +551,13 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UserRegistration'
+            examples:
+              ПримерЗапроса:
+                value:
+                  username: newuser
+                  email: newuser@example.com
+                  password: securepassword123
+                summary: Регистрация нового пользователя
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/UserRegistration'
@@ -524,14 +571,17 @@ paths:
       - {}
       responses:
         '201':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserRegistration'
-          description: ''
+          description: Пользователь успешно зарегистрирован.
+        '400':
+          description: Ошибка валидации данных или имя пользователя/электронная почта
+            уже заняты.
+        '500':
+          description: Неожиданная ошибка при регистрации пользователя.
   /user/favorites/:
     get:
-      operationId: user_favorites_retrieve
+      operationId: user_favorites_list
+      description: Возвращает список избранных продуктов текущего пользователя.
+      summary: Получить избранные продукты
       tags:
       - user
       security:
@@ -542,10 +592,21 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Product'
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
           description: ''
     post:
       operationId: user_favorites_create
+      description: Добавляет указанный продукт в избранное для текущего пользователя.
+      summary: Добавить продукт в избранное
+      parameters:
+      - in: query
+        name: product_id
+        schema:
+          type: integer
+        description: ID продукта для добавления в избранное
+        required: true
       tags:
       - user
       requestBody:
@@ -553,6 +614,11 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/Product'
+            examples:
+              ПримерЗапроса:
+                value:
+                  product_id: 1
+                summary: Добавление продукта с ID 1 в избранное
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/Product'
@@ -564,14 +630,21 @@ paths:
       - cookieAuth: []
       - basicAuth: []
       responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Product'
-          description: ''
+        '201':
+          description: Продукт успешно добавлен в избранное.
+        '404':
+          description: Продукт не найден.
     delete:
       operationId: user_favorites_destroy
+      description: Удаляет указанный продукт из избранного для текущего пользователя.
+      summary: Удалить продукт из избранного
+      parameters:
+      - in: query
+        name: product_id
+        schema:
+          type: integer
+        description: ID продукта для удаления из избранного
+        required: true
       tags:
       - user
       security:
@@ -579,10 +652,15 @@ paths:
       - basicAuth: []
       responses:
         '204':
-          description: No response body
+          description: Продукт успешно удален из избранного.
+        '404':
+          description: Продукт не найден в избранном.
   /user/login/:
     post:
       operationId: user_login_create
+      description: Позволяет пользователю войти в систему с использованием имени пользователя
+        и пароля.
+      summary: Вход пользователя
       tags:
       - user
       requestBody:
@@ -590,6 +668,12 @@ paths:
           application/json:
             schema:
               $ref: '#/components/schemas/UserLogin'
+            examples:
+              ПримерЗапроса:
+                value:
+                  username: existinguser
+                  password: userpassword123
+                summary: Вход пользователя
           application/x-www-form-urlencoded:
             schema:
               $ref: '#/components/schemas/UserLogin'
@@ -603,11 +687,9 @@ paths:
       - {}
       responses:
         '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserLogin'
-          description: ''
+          description: Успешный вход.
+        '400':
+          description: Неверные учетные данные.
 components:
   schemas:
     Cart:
@@ -675,8 +757,6 @@ components:
         id:
           type: integer
           readOnly: true
-        profile:
-          type: integer
         created:
           type: string
           format: date-time
@@ -686,7 +766,7 @@ components:
           format: date-time
           readOnly: true
         status:
-          type: boolean
+          $ref: '#/components/schemas/StatusEnum'
         items:
           type: array
           items:
@@ -695,7 +775,7 @@ components:
       - created
       - id
       - items
-      - profile
+      - status
       - updated
     OrderItem:
       type: object
@@ -822,6 +902,20 @@ components:
       - profile
       - rating
       - updated
+    StatusEnum:
+      enum:
+      - pending
+      - processed
+      - shipped
+      - delivered
+      - canceled
+      type: string
+      description: |-
+        * `pending` - В ожидании
+        * `processed` - Обработан
+        * `shipped` - Отправлен
+        * `delivered` - Доставлен
+        * `canceled` - Отменен
     User:
       type: object
       properties:
