@@ -1,6 +1,14 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 from django.contrib.auth.models import User
+from users.models import Payment
+from shop.models import Profile
+
+
+class PaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Payment
+        fields = ['id', 'profile', 'payment_type', 'card_number', 'expiry_date']
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:

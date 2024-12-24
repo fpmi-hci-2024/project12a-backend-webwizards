@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from cart.models import Cart
 from shop.models import Product, Profile
 from shop.serializers import ProductSerializer, ProfileSerializer
-from users.serializers import UserRegistrationSerializer, UserLoginSerializer
+from users.models import Payment
+from users.serializers import UserRegistrationSerializer, UserLoginSerializer, PaymentSerializer
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,30 @@ class UserLoginAPIView(generics.GenericAPIView):
             200: ProductSerializer(many=True),
         },
     ),
+)
+class FavoritesView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = ProductSerializer
+
+    def post(self, request):
+        product_id = request.data.get('product_id')
+        product = get_object_or_404(Product, id=product_id)
+        profile = get_object_or_404(Profile, user=request.user)
+
+        profile.favorite_products.add(product)
+
+        return Response({'message': 'Продукт добавлен в избранное!'}, status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        profile = get_object_or_404(Profile, user=request.user)
+        favorite_products = profile.favorite_products.all()
+
+        serializer = self.get_serializer(favorite_products, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+
+@extend_schema_view(
     delete=extend_schema(
         summary="Удалить продукт из избранного",
         description="Удаляет указанный продукт из избранного для текущего пользователя.",
@@ -205,24 +230,8 @@ class UserLoginAPIView(generics.GenericAPIView):
         ],
     ),
 )
-class FavoritesView(generics.GenericAPIView):
+class FavoriteDetailView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = ProductSerializer
-
-    def post(self, request, product_id):
-        product = get_object_or_404(Product, id=product_id)
-        profile = get_object_or_404(Profile, user=request.user)
-
-        profile.favorite_products.add(product)
-
-        return Response({'message': 'Продукт добавлен в избранное!'}, status=status.HTTP_201_CREATED)
-
-    def get(self, request):
-        profile = get_object_or_404(Profile, user=request.user)
-        favorite_products = profile.favorite_products.all()
-
-        serializer = self.get_serializer(favorite_products, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def delete(self, request, product_id):
         profile = get_object_or_404(Profile, user=request.user)
@@ -233,3 +242,122 @@ class FavoritesView(generics.GenericAPIView):
             return Response({'message': 'Продукт удален из избранного!'}, status=status.HTTP_204_NO_CONTENT)
         else:
             return Response({'message': 'Продукт не найден в избранном!'}, status=status.HTTP_404_NOT_FOUND)
+
+
+@extend_schema_view(
+    post=extend_schema(
+        summary="Добавить платеж",
+        description="Добавляет указанный платеж для текущего пользователя.",
+        parameters=[
+            OpenApiParameter('payment_type', str, description="Тип платежа", required=True),
+            OpenApiParameter('card_number', str, description="Номер карты", required=True),
+            OpenApiParameter('expiry_date', str, description="Дата истечения срока действия в формате YYYY-MM-DD", required=True),
+        ],
+        responses={
+            201: OpenApiResponse(
+                response=None,
+                description="Платеж успешно добавлен."
+            ),
+            404: OpenApiResponse(
+                response=None,
+                description="Профиль не найден."
+            ),
+        },
+        examples=[
+            OpenApiExample(
+                "Пример запроса",
+                summary="Добавление платежа",
+                value={
+                    "payment_type": "Credit Card",
+                    "card_number": "1234567812345678",
+                    "expiry_date": "2025-12-31",
+                },
+            ),
+        ],
+    ),
+    get=extend_schema(
+        summary="Получить платежи",
+        description="Возвращает список платежей для текущего пользователя.",
+        responses={
+            200: PaymentSerializer(many=True),
+        },
+    ),
+)
+class PaymentView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PaymentSerializer
+
+    def post(self, request):
+        payment_type = request.data.get('payment_type')
+        card_number = request.data.get('card_number')
+        expiry_date = request.data.get('expiry_date')
+
+        profile = get_object_or_404(Profile, user=request.user)
+
+        payment = Payment.objects.create(
+            profile=profile,
+            payment_type=payment_type,
+            card_number=card_number,
+            expiry_date=expiry_date
+        )
+
+        serializer = self.get_serializer(payment)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+    def get(self, request):
+        profile = get_object_or_404(Profile, user=request.user)
+        payments = Payment.objects.filter(profile=profile)
+
+        serializer = self.get_serializer(payments, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+@extend_schema_view(
+    get=extend_schema(
+        summary="Получить платеж",
+        description="Возвращает детали указанного платежа для текущего пользователя.",
+        parameters=[
+            OpenApiParameter('id', int, description="ID платежа", required=True),
+        ],
+        responses={
+            200: PaymentSerializer,
+            404: OpenApiResponse(
+                response=None,
+                description="Платеж не найден."
+            ),
+        },
+    ),
+    delete=extend_schema(
+        summary="Удалить платеж",
+        description="Удаляет указанный платеж для текущего пользователя.",
+        responses={
+            204: OpenApiResponse(
+                response=None,
+                description="Платеж успешно удален."
+            ),
+            404: OpenApiResponse(
+                response=None,
+                description="Платеж не найден."
+            ),
+        },
+    ),
+)
+class PaymentDetailView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = PaymentSerializer
+
+    def get(self, request, payment_id):
+        profile = get_object_or_404(Profile, user=request.user)
+        payment = get_object_or_404(Payment, id=payment_id, profile=profile)
+
+        serializer = self.get_serializer(payment)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def delete(self, request, payment_id):
+        profile = get_object_or_404(Profile, user=request.user)
+
+        try:
+            payment = Payment.objects.get(id=payment_id, profile=profile)
+            payment.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Payment.DoesNotExist:
+            return Response({'message': 'Платеж не найден.'}, status=status.HTTP_404_NOT_FOUND)

@@ -153,22 +153,8 @@ class CategoryProductsAPIView(generics.ListAPIView):
             ),
         },
     ),
-    delete=extend_schema(
-        summary="Удаление отзыва о продукте",
-        description="Удалить отзыв пользователя о продукте. Если отзыв не найден, будет возвращено сообщение об ошибке.",
-        responses={
-            204: OpenApiResponse(
-                response=None,
-                description="Отзыв успешно удален."
-            ),
-            404: OpenApiResponse(
-                response=None,
-                description="Отзыв не найден."
-            ),
-        },
-    ),
 )
-class ReviewView(generics.GenericAPIView):
+class ReviewListView(generics.GenericAPIView):
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticated]
 
@@ -195,9 +181,28 @@ class ReviewView(generics.GenericAPIView):
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(profile=profile)
+            serializer.save(profile=profile, product_id=product_id)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@extend_schema_view(
+    delete=extend_schema(
+        summary="Удаление отзыва о продукте",
+        description="Удалить отзыв пользователя о продукте. Если отзыв не найден, будет возвращено сообщение об ошибке.",
+        responses={
+            204: OpenApiResponse(
+                response=None,
+                description="Отзыв успешно удален."
+            ),
+            404: OpenApiResponse(
+                response=None,
+                description="Отзыв не найден."
+            ),
+        },
+    ),
+)
+class ReviewDetailView(generics.GenericAPIView):
+    permission_classes = [IsAuthenticated]
 
     def delete(self, request, *args, **kwargs):
         product_id = self.kwargs.get('product_id')
