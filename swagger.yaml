@@ -517,6 +517,7 @@ paths:
           description: ''
         '400':
           description: Ошибка валидации данных. Пользователь уже оставил отзыв.
+  /products/{product_id}/reviews/{review_id}/:
     delete:
       operationId: products_reviews_destroy
       description: Удалить отзыв пользователя о продукте. Если отзыв не найден, будет
@@ -525,6 +526,11 @@ paths:
       parameters:
       - in: path
         name: product_id
+        schema:
+          type: integer
+        required: true
+      - in: path
+        name: review_id
         schema:
           type: integer
         required: true
@@ -653,11 +659,17 @@ paths:
           description: Продукт успешно добавлен в избранное.
         '404':
           description: Продукт не найден.
+  /user/favorites/{product_id}/:
     delete:
       operationId: user_favorites_destroy
       description: Удаляет указанный продукт из избранного для текущего пользователя.
       summary: Удалить продукт из избранного
       parameters:
+      - in: path
+        name: product_id
+        schema:
+          type: integer
+        required: true
       - in: query
         name: product_id
         schema:
@@ -709,6 +721,128 @@ paths:
           description: Успешный вход.
         '400':
           description: Неверные учетные данные.
+  /user/payments/:
+    get:
+      operationId: user_payments_list
+      description: Возвращает список платежей для текущего пользователя.
+      summary: Получить платежи
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Payment'
+          description: ''
+    post:
+      operationId: user_payments_create
+      description: Добавляет указанный платеж для текущего пользователя.
+      summary: Добавить платеж
+      parameters:
+      - in: query
+        name: card_number
+        schema:
+          type: string
+        description: Номер карты
+        required: true
+      - in: query
+        name: expiry_date
+        schema:
+          type: string
+        description: Дата истечения срока действия в формате YYYY-MM-DD
+        required: true
+      - in: query
+        name: payment_type
+        schema:
+          type: string
+        description: Тип платежа
+        required: true
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Payment'
+            examples:
+              ПримерЗапроса:
+                value:
+                  payment_type: Credit Card
+                  card_number: '1234567812345678'
+                  expiry_date: '2025-12-31'
+                summary: Добавление платежа
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Payment'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Payment'
+        required: true
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '201':
+          description: Платеж успешно добавлен.
+        '404':
+          description: Профиль не найден.
+  /user/payments/{payment_id}/:
+    get:
+      operationId: user_payments_retrieve
+      description: Возвращает детали указанного платежа для текущего пользователя.
+      summary: Получить платеж
+      parameters:
+      - in: query
+        name: id
+        schema:
+          type: integer
+        description: ID платежа
+        required: true
+      - in: path
+        name: payment_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+        '404':
+          description: Платеж не найден.
+    delete:
+      operationId: user_payments_destroy
+      description: Удаляет указанный платеж для текущего пользователя.
+      summary: Удалить платеж
+      parameters:
+      - in: path
+        name: payment_id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - user
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      responses:
+        '204':
+          description: Платеж успешно удален.
+        '404':
+          description: Платеж не найден.
 components:
   schemas:
     Cart:
@@ -812,6 +946,29 @@ components:
       required:
       - price
       - product
+    Payment:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        profile:
+          type: integer
+        payment_type:
+          type: string
+          maxLength: 20
+        card_number:
+          type: string
+          maxLength: 16
+        expiry_date:
+          type: string
+          format: date
+      required:
+      - card_number
+      - expiry_date
+      - id
+      - payment_type
+      - profile
     Product:
       type: object
       properties:
