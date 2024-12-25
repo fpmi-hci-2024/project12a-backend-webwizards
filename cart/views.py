@@ -8,7 +8,6 @@ from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
 
 # Create your views here.
-@method_decorator(csrf_exempt, name='dispatch')
 @extend_schema_view(
     get=extend_schema(
         summary="Получение корзины",

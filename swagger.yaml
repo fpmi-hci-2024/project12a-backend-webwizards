@@ -10,6 +10,28 @@ info:
     name: MIT
     url: https://opensource.org/licenses/MIT
 paths:
+  /addresses/:
+    get:
+      operationId: addresses_list
+      description: Возвращает список всех доступных адресов.
+      summary: Получение списка адресов
+      tags:
+      - addresses
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+          description: ''
+        '404':
+          description: Адреса не найдены.
   /api/schema/:
     get:
       operationId: api_schema_retrieve
@@ -324,6 +346,56 @@ paths:
           description: ''
         '404':
           description: Продукты не найдены для этой категории.
+  /cities/:
+    get:
+      operationId: cities_list
+      description: Возвращает список всех доступных городов.
+      summary: Получение списка городов
+      tags:
+      - cities
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/City'
+          description: ''
+        '404':
+          description: Города не найдены.
+  /cities/{slug}/addresses/:
+    get:
+      operationId: cities_addresses_list
+      description: Возвращает список адресов, связанных с указанным городом.
+      summary: Получение адресов по городу
+      parameters:
+      - in: path
+        name: slug
+        schema:
+          type: string
+        required: true
+      tags:
+      - cities
+      security:
+      - cookieAuth: []
+      - basicAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Address'
+          description: ''
+        '404':
+          description: Город не найден или адреса не найдены.
   /orders/:
     get:
       operationId: orders_list
@@ -845,6 +917,23 @@ paths:
           description: Платеж не найден.
 components:
   schemas:
+    Address:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        city:
+          type: integer
+          title: Город
+        name:
+          type: string
+          title: Адрес
+          maxLength: 255
+      required:
+      - city
+      - id
+      - name
     Cart:
       type: object
       properties:
@@ -904,6 +993,27 @@ components:
       - id
       - name
       - slug
+    City:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        region:
+          allOf:
+          - $ref: '#/components/schemas/RegionEnum'
+          title: Область
+        slug:
+          type: string
+          maxLength: 255
+      required:
+      - id
+      - name
+      - region
+      - slug
     Order:
       type: object
       properties:
@@ -935,16 +1045,11 @@ components:
       properties:
         product:
           type: integer
-        price:
-          type: string
-          format: decimal
-          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
         quantity:
           type: integer
           maximum: 2147483647
           minimum: 0
       required:
-      - price
       - product
     Payment:
       type: object
@@ -1031,7 +1136,10 @@ components:
           items:
             $ref: '#/components/schemas/Product'
           readOnly: true
+        city:
+          $ref: '#/components/schemas/City'
       required:
+      - city
       - favorite_products
       - id
       - user
@@ -1049,6 +1157,22 @@ components:
         * `3` - 3
         * `4` - 4
         * `5` - 5
+    RegionEnum:
+      enum:
+      - minsk
+      - grodno
+      - vitebsk
+      - gomel
+      - mogilev
+      - brest
+      type: string
+      description: |-
+        * `minsk` - Минская область
+        * `grodno` - Гродненская область
+        * `vitebsk` - Витебская область
+        * `gomel` - Гомельская область
+        * `mogilev` - Могилевская область
+        * `brest` - Брестская область
     Review:
       type: object
       properties:

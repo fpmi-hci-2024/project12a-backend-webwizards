@@ -8,5 +8,9 @@ class Payment(models.Model):
     card_number = models.CharField(max_length=16)
     expiry_date = models.DateField()
 
+    class Meta:
+        verbose_name = 'Платеж'
+        verbose_name_plural = 'Платежи'
+
     def __str__(self):
         return f"{self.payment_type} - {self.card_number[-4:]}"

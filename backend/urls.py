@@ -24,6 +24,7 @@ urlpatterns = [
     path('cart/', include(('cart.urls', 'cart'), namespace='cart')),
     path('orders/', include(('orders.urls', 'orders'), namespace='orders')),
     path('user/', include(('users.urls', 'users'), namespace='users')),
+    path('', include(('addresses.urls', 'address'), namespace='address')),
     path('', include(('shop.urls', 'shop'), namespace='shop')),
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
     path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='docs')

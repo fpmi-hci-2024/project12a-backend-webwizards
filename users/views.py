@@ -71,10 +71,8 @@ class UserProfileAPIView(generics.CreateAPIView):
 
         try:
             user = serializer.create(serializer.initial_data)
-            profile = Profile.objects.create(user=user)
-            Cart.objects.create(profile=profile)
 
-            logger.info(f"User registered successfully: {user.username} with profile: {profile.id}")
+            logger.info(f"User registered successfully: {user.username}")
             return Response({'message': 'Пользователь успешно зарегистрирован!'}, status=status.HTTP_201_CREATED)
 
         except IntegrityError:

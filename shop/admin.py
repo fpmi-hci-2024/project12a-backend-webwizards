@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from shop.models import Category, Product
+from shop.models import Category, Product, Review, Profile
 
 
 # Register your models here.
@@ -20,3 +20,20 @@ class ProductAdmin(admin.ModelAdmin):
 
 
 admin.site.register(Product, ProductAdmin)
+
+
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ['product', 'profile', 'rating', 'created', 'updated']
+    list_filter = ['rating', 'created']
+    readonly_fields = ['created', 'updated']
+
+
+admin.site.register(Review, ReviewAdmin)
+
+
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ['user', 'city']
+    search_fields = ['user__username']
+
+
+admin.site.register(Profile, ProfileAdmin)

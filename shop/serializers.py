@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
+
+from addresses.serializers import CitySerializer
 from .models import Category, Product, Review, Profile
 
 class ProductSerializer(serializers.ModelSerializer):
@@ -16,10 +18,11 @@ class UserSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     user = UserSerializer()
     favorite_products = ProductSerializer(many=True, read_only=True)
+    city = CitySerializer()
 
     class Meta:
         model = Profile
-        fields = ['id', 'user','favorite_products']
+        fields = ['id', 'user', 'favorite_products', 'city']
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)
