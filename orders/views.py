@@ -6,7 +6,8 @@ from rest_framework.permissions import IsAuthenticated
 
 from cart.models import Cart
 from .models import Order, OrderItem
-from .serializers import OrderSerializer, OrderItemSerializer
+from .serializers import OrderSerializer, OrderItemSerializer, OrderCreateSerializer
+
 
 # Create your views here.
 @extend_schema_view(
@@ -20,34 +21,42 @@ from .serializers import OrderSerializer, OrderItemSerializer
     post=extend_schema(
         summary="Создание нового заказа на основе элементов корзины",
         description="Создать новый заказ для текущего пользователя, перенести все элементы из корзины в заказ. Если корзина пуста, будет возвращено сообщение об ошибке.",
+        request=OrderCreateSerializer,  # Указываем, что запрос должен содержать OrderCreateSerializer
         responses={
             201: OrderSerializer,
             400: OpenApiResponse(
                 response=None,
-                description="Корзина пуста. Заказ не был создан."
+                description="Корзина пуста или отсутствуют адрес и платеж. Заказ не был создан."
             ),
         },
     ),
 )
 class OrderAPIView(generics.GenericAPIView):
     permission_classes = [IsAuthenticated]
-    serializer_class = OrderSerializer
+    serializer_class = OrderCreateSerializer  # Используем новый сериализатор
 
     def get(self, request):
         orders = Order.objects.filter(profile=request.user.profile)
-        serializer = self.get_serializer(orders, many=True)
+        serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data)
 
     def post(self, request):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
         profile = request.user.profile
+        address_id = serializer.validated_data['address']
+        payment_id = serializer.validated_data['payment']
 
         cart = Cart.objects.filter(profile=profile).first()
         if not cart or cart.total_items == 0:
             return Response({"detail": "Корзина пуста."}, status=status.HTTP_400_BAD_REQUEST)
 
-        order = Order(profile=profile)
+        # Создаем новый заказ
+        order = Order(profile=profile, address_id=address_id, payment_id=payment_id)
         order.save()
 
+        # Переносим элементы из корзины в заказ
         for cart_item in cart.items.all():
             OrderItem.objects.create(
                 order=order,
@@ -56,10 +65,12 @@ class OrderAPIView(generics.GenericAPIView):
                 quantity=cart_item.quantity
             )
 
+        # Очищаем корзину
         cart.items.all().delete()
 
-        serializer = self.get_serializer(order)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        response_serializer = OrderSerializer(order)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
 
 @extend_schema_view(
     get=extend_schema(

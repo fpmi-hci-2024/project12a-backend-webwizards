@@ -1,7 +1,9 @@
 from django.contrib import admin
+from django import forms
 
+from addresses.models import Address
 from orders.models import OrderItem, Order
-
+from users.models import Payment
 
 # Register your models here.
 class OrderItemInline(admin.TabularInline):
@@ -19,7 +21,7 @@ class OrderItemInline(admin.TabularInline):
         return False  # Запретить удаление OrderItem
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'profile', 'status', 'created', 'updated']
+    list_display = ['id', 'profile', 'status', 'created', 'updated', 'address', 'payment']
     list_filter = ['status', 'created']
     inlines = [OrderItemInline]
 

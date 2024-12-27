@@ -427,13 +427,13 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Order'
+              $ref: '#/components/schemas/OrderCreate'
           application/x-www-form-urlencoded:
             schema:
-              $ref: '#/components/schemas/Order'
+              $ref: '#/components/schemas/OrderCreate'
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/Order'
+              $ref: '#/components/schemas/OrderCreate'
         required: true
       security:
       - cookieAuth: []
@@ -446,7 +446,8 @@ paths:
                 $ref: '#/components/schemas/Order'
           description: ''
         '400':
-          description: Корзина пуста. Заказ не был создан.
+          description: Корзина пуста или отсутствуют адрес и платеж. Заказ не был
+            создан.
   /orders/{id}/:
     get:
       operationId: orders_retrieve
@@ -1034,12 +1035,28 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/OrderItem'
+        address:
+          $ref: '#/components/schemas/Address'
+        payment:
+          $ref: '#/components/schemas/Payment'
       required:
+      - address
       - created
       - id
       - items
+      - payment
       - status
       - updated
+    OrderCreate:
+      type: object
+      properties:
+        address:
+          type: integer
+        payment:
+          type: integer
+      required:
+      - address
+      - payment
     OrderItem:
       type: object
       properties:

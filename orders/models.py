@@ -1,6 +1,8 @@
 from django.db import models
 
 from shop.models import Product, Profile
+from addresses.models import Address
+from users.models import Payment
 
 
 # Create your models here.
@@ -17,6 +19,8 @@ class Order(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, db_index=True)
+    address = models.ForeignKey('addresses.Address', on_delete=models.CASCADE, verbose_name='Адрес', related_name='orders')
+    payment = models.ForeignKey('users.Payment', on_delete=models.CASCADE, verbose_name='Платеж', related_name='orders')
 
     class Meta:
         ordering = ('-created',)
@@ -33,7 +37,6 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, related_name='items', on_delete=models.CASCADE)
     product = models.ForeignKey(Product, related_name='order_items', on_delete=models.CASCADE)
-    # price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.PositiveIntegerField(default=1)
 
     def __str__(self):
