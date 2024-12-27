@@ -3,7 +3,6 @@ from django.db import models
 
 from addresses.models import City
 
-
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     favorite_products = models.ManyToManyField('Product', related_name='favorited_by', blank=True)

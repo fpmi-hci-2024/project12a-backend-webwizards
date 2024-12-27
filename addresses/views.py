@@ -1,16 +1,10 @@
-from django.shortcuts import render
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import ListAPIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.views import APIView
 
 from .models import City, Address
 from .serializers import CitySerializer, AddressSerializer
-from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse
 
-
-# Create your views here.
 @extend_schema_view(
     get=extend_schema(
         summary="Получение списка городов",

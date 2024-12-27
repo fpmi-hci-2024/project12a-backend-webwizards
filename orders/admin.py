@@ -1,24 +1,22 @@
 from django.contrib import admin
-from django import forms
 
-from addresses.models import Address
 from orders.models import OrderItem, Order
-from users.models import Payment
+
 
 # Register your models here.
 class OrderItemInline(admin.TabularInline):
     model = OrderItem
-    extra = 1  # Количество пустых форм для добавления новых OrderItem
-    readonly_fields = ['product', 'quantity']  # Укажите поля, которые должны быть только для чтения
+    extra = 1
+    readonly_fields = ['product', 'quantity']
 
     def has_add_permission(self, request, obj=None):
-        return False  # Запретить добавление новых OrderItem
+        return False
 
     def has_change_permission(self, request, obj=None):
-        return False  # Запретить изменение существующих OrderItem
+        return False
 
     def has_delete_permission(self, request, obj=None):
-        return False  # Запретить удаление OrderItem
+        return False
 
 class OrderAdmin(admin.ModelAdmin):
     list_display = ['id', 'profile', 'status', 'created', 'updated', 'address', 'payment']
